@@ -11,17 +11,32 @@ public class Player : MonoBehaviour
 
 	const float MOVE_SPEED = 10.0f;
 	const float JUMP_SPEED = 24.0f;
+	const int MAX_AIR_DASHES = 1;
 
 	public float moveDirection;
 	public bool grounded;
 	public int facing = 1;
 	public bool dashing = false;
+	public int airDashesLeft = MAX_AIR_DASHES;
+	public bool jumping = false;
+
+	public bool jumpCharging = false;
+	public float maxJumpCharge = 9.0f;
+	public float jumpCharge = 0;
 
 	public Action movementMode;
 
 	[SerializeField]
 	public ParticleSystem jumpParticle;
 
+	[SerializeField]
+	public ParticleSystem dashParticle;
+
+	[SerializeField]
+	public ParticleSystem jumpChargingParticle;
+
+	[SerializeField]
+	public ParticleSystem jumpChargedParticle;
 	private void Awake()
 	{
 		current = this;
@@ -48,7 +63,8 @@ public class Player : MonoBehaviour
 			movementMode = MovementAir;
 			MovementAir();
 		}
-		SetVelocityX(Mathf.MoveTowards(rigidbody.velocity.x, moveDirection * MOVE_SPEED, 75f * Time.fixedDeltaTime));
+
+		SetVelocityX(moveDirection * MOVE_SPEED);
 	}
 
 	private void MovementAir()
@@ -56,9 +72,11 @@ public class Player : MonoBehaviour
 		if (grounded)
 		{
 			movementMode = MovementGrounded;
+			airDashesLeft = MAX_AIR_DASHES;
 			MovementGrounded();
 		}
-		SetVelocityX(Mathf.MoveTowards(rigidbody.velocity.x, moveDirection * MOVE_SPEED, 62f * Time.fixedDeltaTime));
+
+		SetVelocityX(moveDirection * MOVE_SPEED);
 	}
 
 	private void MovementDashing()
@@ -66,13 +84,68 @@ public class Player : MonoBehaviour
 		SetVelocityX(Mathf.MoveTowards(rigidbody.velocity.x, 0, 90f * Time.fixedDeltaTime));
 	}
 
-	void OnJump()
+	private void MovementJumpCharging()
 	{
+		const float JUMP_CHARGE_SPEED = 5.0f;
+		SetVelocityX(Mathf.MoveTowards(rigidbody.velocity.x, 0, 90f * Time.fixedDeltaTime));
+		jumpCharge = Mathf.Clamp(jumpCharge + Time.deltaTime * JUMP_CHARGE_SPEED, 0, maxJumpCharge);
+	}
+
+	void OnJump(InputValue value)
+	{
+		if (!value.isPressed)
+		{
+			OnJumpCanceled();
+			return;
+		}
+
 		if (!grounded) { return; }
 		if (dashing) ExitDash();
 
-		SetVelocityY(JUMP_SPEED);
+		SetVelocityY(JUMP_SPEED + jumpCharge);
 		jumpParticle.Play();
+		jumping = true;
+
+		if (jumpCharging) ResetJumpCharge();
+	}
+
+	void OnJumpCanceled()
+	{
+		Debug.Log($"{rigidbody.velocity.y}  {jumping}");
+		if (!jumping) return;
+		jumping = false;
+
+		if (rigidbody.velocity.y <= 5) return;
+
+		Debug.Log("Jump canceled");
+		SetVelocityY(rigidbody.velocity.y / 3);
+
+	}
+
+	void OnCrouch(InputValue value)
+	{
+		if (!grounded) return;
+
+		bool pressed = value.isPressed;
+
+		if (pressed) StartJumpCharge();
+		else ResetJumpCharge();
+
+	}
+
+	void StartJumpCharge()
+	{
+		Debug.Log("starting charge jump");
+		movementMode = MovementJumpCharging;
+		jumpCharging = true;
+	}
+
+	void ResetJumpCharge()
+	{
+		Debug.Log($"charge jump {jumpCharge}");
+		jumpCharging = false;
+		jumpCharge = 0;
+		movementMode = MovementAir;
 	}
 
 	void SetVelocityX(float velocityX)
@@ -99,7 +172,7 @@ public class Player : MonoBehaviour
 
 	void OnDash()
 	{
-		if (dashing) return;
+		if (dashing || airDashesLeft <= 0) return;
 
 		StartCoroutine("OnDashCoroutine");
 	}
@@ -108,10 +181,12 @@ public class Player : MonoBehaviour
 	{
 
 		SetVelocityXY(MOVE_SPEED * 3.6f * facing, 0);
-		jumpParticle.Play();
+		dashParticle.Play();
 		grounded = false;
 		dashing = true;
 		rigidbody.useGravity = false;
+		movementMode = MovementDashing;
+		airDashesLeft--;
 	}
 
 	void ExitDash()
