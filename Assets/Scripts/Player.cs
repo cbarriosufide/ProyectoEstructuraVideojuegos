@@ -12,6 +12,7 @@ public class Player : MonoBehaviour
 	const float MOVE_SPEED = 10.0f;
 	const float JUMP_SPEED = 24.0f;
 	const int MAX_AIR_DASHES = 1;
+	const float JUMP_CHARGE_SPEED = 6.0f;
 
 	public float moveDirection;
 	public bool grounded;
@@ -21,7 +22,8 @@ public class Player : MonoBehaviour
 	public bool jumping = false;
 
 	public bool jumpCharging = false;
-	public float maxJumpCharge = 9.0f;
+	public bool jumpChargingFinished = false;
+	float maxJumpCharge = 15.0f;
 	public float jumpCharge = 0;
 
 	public Action movementMode;
@@ -36,7 +38,10 @@ public class Player : MonoBehaviour
 	public ParticleSystem jumpChargingParticle;
 
 	[SerializeField]
-	public ParticleSystem jumpChargedParticle;
+	public ParticleSystem jumpChargedReleaseParticle;
+
+	[SerializeField]
+	public ParticleSystem jumpChargingComplete;
 	private void Awake()
 	{
 		current = this;
@@ -86,9 +91,20 @@ public class Player : MonoBehaviour
 
 	private void MovementJumpCharging()
 	{
-		const float JUMP_CHARGE_SPEED = 5.0f;
 		SetVelocityX(Mathf.MoveTowards(rigidbody.velocity.x, 0, 90f * Time.fixedDeltaTime));
-		jumpCharge = Mathf.Clamp(jumpCharge + Time.deltaTime * JUMP_CHARGE_SPEED, 0, maxJumpCharge);
+
+		if (jumpChargingFinished) return;
+
+		jumpCharge += Time.deltaTime * JUMP_CHARGE_SPEED;
+
+		if (jumpCharge >= maxJumpCharge)
+		{
+			jumpChargingFinished = true;
+			jumpChargingParticle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+			jumpChargingComplete.Play();
+		}
+
+		jumpCharge = Mathf.Clamp(jumpCharge, 0, maxJumpCharge);
 	}
 
 	void OnJump(InputValue value)
@@ -101,6 +117,12 @@ public class Player : MonoBehaviour
 
 		if (!grounded) { return; }
 		if (dashing) ExitDash();
+
+
+		if (jumpCharge == maxJumpCharge)
+		{
+			jumpChargedReleaseParticle.Play();
+		}
 
 		SetVelocityY(JUMP_SPEED + jumpCharge);
 		jumpParticle.Play();
@@ -136,6 +158,7 @@ public class Player : MonoBehaviour
 	void StartJumpCharge()
 	{
 		Debug.Log("starting charge jump");
+		jumpChargingParticle.Play();
 		movementMode = MovementJumpCharging;
 		jumpCharging = true;
 	}
@@ -144,7 +167,9 @@ public class Player : MonoBehaviour
 	{
 		Debug.Log($"charge jump {jumpCharge}");
 		jumpCharging = false;
+		jumpChargingFinished = false;
 		jumpCharge = 0;
+		jumpChargingParticle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
 		movementMode = MovementAir;
 	}
 
