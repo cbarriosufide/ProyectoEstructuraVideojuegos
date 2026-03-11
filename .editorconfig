@@ -1,0 +1,23 @@
+[*.cs]
+
+dotnet_code_quality_unused_member_allowed_names = 
+    Awake,
+    Start,
+    Update,
+    FixedUpdate,
+    LateUpdate,
+    OnEnable,
+    OnDisable,
+    OnDestroy,
+    OnCollisionEnter,
+    OnCollisionStay,
+    OnCollisionExit,
+    OnCollisionEnter2D,
+    OnCollisionStay2D,
+    OnCollisionExit2D,
+    OnTriggerEnter,
+    OnTriggerStay,
+    OnTriggerExit,
+    OnTriggerEnter2D,
+    OnTriggerStay2D,
+    OnTriggerExit2D
