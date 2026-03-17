@@ -1,5 +1,15 @@
 Library/
 Obj/
 Build/
+Builds/
 Temp/
 Logs/
+*.csproj
+*.unityproj
+*.userosscache
+*.sln
+*.suo
+*.user
+*.sln.docuser
+.vscode/
+.idea/
