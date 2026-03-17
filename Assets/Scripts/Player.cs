@@ -12,7 +12,7 @@ public class Player : MonoBehaviour
 	const float MOVE_SPEED = 10.0f;
 	const float JUMP_SPEED = 24.0f;
 	const int MAX_AIR_DASHES = 1;
-	const float JUMP_CHARGE_SPEED = 6.0f;
+	const float JUMP_CHARGE_SPEED = 9.0f;
 
 	public float moveDirection;
 	public bool grounded;

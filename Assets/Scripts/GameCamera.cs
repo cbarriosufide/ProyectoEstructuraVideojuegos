@@ -8,7 +8,9 @@ public class GameCamera : MonoBehaviour
 	public static GameCamera current;
 
 	public Func<Vector3> mode;
-	public Vector3 velocity;
+	Vector3 velocity;
+	public float camDistance = 21f;
+	public float yOffset = 2f;
 
 
 	void Awake()
@@ -29,6 +31,6 @@ public class GameCamera : MonoBehaviour
 
 	public Vector3 ModeFollowPlayer()
 	{
-		return Player.current.transform.position + new Vector3(0, 4, -14);
+		return Player.current.transform.position + new Vector3(0, yOffset, -camDistance);
 	}
 }
