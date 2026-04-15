@@ -15,9 +15,10 @@ public class Player : MonoBehaviour
 	}
 
 	public static Player current;
-	Rigidbody rigidbody;
 	Animator animator;
 	SkinnedMeshRenderer renderer;
+	public new Rigidbody rigidbody;
+	public bool onMovingPlatform = false; // Flag para indicar que está en una plataforma móvil
 
 	const float MOVE_SPEED = 10.0f;
 	const float JUMP_SPEED = 24.0f;
@@ -77,10 +78,18 @@ public class Player : MonoBehaviour
 
 	private void Movement()
 	{
-		grounded = Physics.Raycast(transform.position + Vector3.up * 0.02f, Vector3.down, 1f);
+		// Si está en una plataforma móvil, mantener grounded = true
+		if (onMovingPlatform)
+		{
+			grounded = true;
+		}
+		else
+		{
+			grounded = Physics.Raycast(transform.position, Vector3.down, 1.1f);
+		}
+
 		animator.SetBool("Grounded", grounded);
 		animator.SetFloat("MoveSpeed", Mathf.Abs(rigidbody.velocity.x));
-
 		movementMode?.Invoke();
 
 	}

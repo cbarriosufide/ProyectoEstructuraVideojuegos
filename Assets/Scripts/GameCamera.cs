@@ -20,6 +20,14 @@ public class GameCamera : MonoBehaviour
 	{
 		current = this;
 		mode = ModeFollowPlayer;
+
+		// Si Player.current aún no está inicializado, búscalo
+		if (Player.current == null)
+		{
+			Player player = FindObjectOfType<Player>();
+			if (player != null)
+				Player.current = player;
+		}
 	}
 
 	private void Start()
@@ -37,6 +45,9 @@ public class GameCamera : MonoBehaviour
 
 	public Vector3 ModeFollowPlayer()
 	{
+		if (Player.current == null)
+			return transform.position;
+
 		return Player.current.transform.position + new Vector3(0, yOffset, -camDistance);
 	}
 
