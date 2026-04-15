@@ -5,11 +5,14 @@ using System;
 
 public class GameCamera : MonoBehaviour
 {
+	public const float DEFAULT_CAM_DISTANCE = 21f;
+
 	public static GameCamera current;
+	public AudioLowPassFilter lowPassFilter;
 
 	public Func<Vector3> mode;
 	Vector3 velocity;
-	public float camDistance = 21f;
+	public float camDistance = DEFAULT_CAM_DISTANCE;
 	public float yOffset = 2f;
 
 
@@ -17,11 +20,14 @@ public class GameCamera : MonoBehaviour
 	{
 		current = this;
 		mode = ModeFollowPlayer;
-
-
 	}
 
-	private void LateUpdate()
+	private void Start()
+	{
+		lowPassFilter = GetComponent<AudioLowPassFilter>();
+	}
+
+	private void Update()
 	{
 		if (mode != null)
 		{
@@ -32,5 +38,29 @@ public class GameCamera : MonoBehaviour
 	public Vector3 ModeFollowPlayer()
 	{
 		return Player.current.transform.position + new Vector3(0, yOffset, -camDistance);
+	}
+
+	public Vector3 ModeFixed()
+	{
+		return new Vector3(0, yOffset, -camDistance);
+	}
+
+	public void LowPassImpact(float time)
+	{
+		StopCoroutine(LowPassFilterCoroutine(time));
+		StartCoroutine(LowPassFilterCoroutine(time));
+	}
+
+	IEnumerator LowPassFilterCoroutine(float delay)
+	{
+		lowPassFilter.cutoffFrequency = 500;
+
+		yield return new WaitForSecondsRealtime(delay);
+
+		while (lowPassFilter.cutoffFrequency < 22000)
+		{
+			lowPassFilter.cutoffFrequency = Mathf.MoveTowards(lowPassFilter.cutoffFrequency, 22000, 500);
+			yield return new WaitForSecondsRealtime(0.1f);
+		}
 	}
 }
