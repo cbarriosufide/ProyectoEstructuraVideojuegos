@@ -50,6 +50,11 @@ public class Player : MonoBehaviour
 	public ParticleSystem jumpChargingComplete;
 
 	public AudioSource sfxHurt;
+	public AudioSource sfxStep;
+	public AudioSource sfxJump;
+	public AudioSource sfxDash;
+	public AudioSource sfxChargeLoop;
+	public AudioSource sfxChargeComplete;
 
 	private void Awake()
 	{
@@ -64,6 +69,11 @@ public class Player : MonoBehaviour
 		jumpChargingComplete = transform.Find("JumpChargingCompleteParticle").GetComponent<ParticleSystem>();
 
 		sfxHurt = transform.Find("SFXHurt").GetComponent<AudioSource>();
+		sfxStep = transform.Find("SFXStep").GetComponent<AudioSource>();
+		sfxJump = transform.Find("SFXJump").GetComponent<AudioSource>();
+		sfxDash = transform.Find("SFXDash").GetComponent<AudioSource>();
+		sfxChargeLoop = transform.Find("SFXChargeLoop").GetComponent<AudioSource>();
+		sfxChargeComplete = transform.Find("SFXChargeComplete").GetComponent<AudioSource>();
 
 		animator = GetComponent<Animator>();
 
@@ -109,6 +119,11 @@ public class Player : MonoBehaviour
 
 		SetVelocityX(moveDirection * MOVE_SPEED);
 		transform.eulerAngles = new Vector3(0, facing == Facing.RIGHT ? 90 : -90, 0);
+
+		if (moveDirection != 0 && sfxStep.isPlaying == false)
+		{
+			sfxStep.Play();
+		}
 	}
 
 	private void MovementAir()
@@ -118,6 +133,7 @@ public class Player : MonoBehaviour
 			movementMode = MovementGrounded;
 			airDashesLeft = MAX_AIR_DASHES;
 			MovementGrounded();
+			sfxStep.Play();
 		}
 
 		SetVelocityX(moveDirection * MOVE_SPEED);
@@ -143,6 +159,12 @@ public class Player : MonoBehaviour
 			jumpChargingFinished = true;
 			jumpChargingParticle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
 			jumpChargingComplete.Play();
+			sfxChargeComplete.Play();
+		}
+
+		if (!sfxChargeLoop.isPlaying)
+		{
+			sfxChargeLoop.Play();
 		}
 
 		jumpCharge = Mathf.Clamp(jumpCharge, 0, maxJumpCharge);
@@ -168,9 +190,11 @@ public class Player : MonoBehaviour
 		if (jumpCharge == maxJumpCharge)
 		{
 			jumpChargedReleaseParticle.Play();
+			sfxDash.Play();
 		}
 
 		SetVelocityY(JUMP_SPEED + jumpCharge);
+		sfxJump.Play();
 
 		float particleScale = 1 + jumpCharge / 5f;
 
@@ -289,6 +313,7 @@ public class Player : MonoBehaviour
 
 	IEnumerator OnDashCoroutine()
 	{
+
 		EnterDash();
 		yield return new WaitUntil(() => Mathf.Abs(rigidbody.velocity.x) <= MOVE_SPEED * 1.5);
 		ExitDash();
@@ -296,6 +321,7 @@ public class Player : MonoBehaviour
 
 	void EnterDash()
 	{
+		sfxDash.Play();
 
 		SetVelocityXY(MOVE_SPEED * 3.6f * (int)facing, 0);
 		dashParticle.Play();
