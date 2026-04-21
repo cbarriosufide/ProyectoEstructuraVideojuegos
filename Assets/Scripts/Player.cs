@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Audio;
 using UnityEngine.InputSystem;
@@ -56,6 +57,10 @@ public class Player : MonoBehaviour
 	public AudioSource sfxChargeLoop;
 	public AudioSource sfxChargeComplete;
 
+
+	private Rigidbody currentPlatform;
+	private Vector3 currentPlatformPosition;
+
 	private void Awake()
 	{
 		current = this;
@@ -106,6 +111,16 @@ public class Player : MonoBehaviour
 		animator.SetBool("Grounded", grounded);
 		animator.SetFloat("MoveSpeed", Mathf.Abs(rigidbody.velocity.x));
 		movementMode?.Invoke();
+
+		if (currentPlatform)
+		{
+			if (currentPlatformPosition != null)
+			{
+				transform.position += new Vector3(currentPlatform.transform.position.x - currentPlatformPosition.x, 0, 0);
+			}
+
+			currentPlatformPosition = currentPlatform.transform.position;
+		}
 
 	}
 
@@ -174,6 +189,7 @@ public class Player : MonoBehaviour
 	{
 		SetVelocityX(Mathf.MoveTowards(rigidbody.velocity.x, 0, 90f * Time.fixedDeltaTime));
 	}
+
 
 	void OnJump(InputValue value)
 	{
@@ -399,9 +415,13 @@ public class Player : MonoBehaviour
 	{
 		hp = 0;
 
-		StopCoroutine("_DieCoroutine");
+		if (activeDieCoroutine != null)
+			return;
+
 		StartCoroutine("_DieCoroutine");
 	}
+
+	Coroutine activeDieCoroutine = null;
 
 	IEnumerator _DieCoroutine()
 	{
@@ -413,5 +433,27 @@ public class Player : MonoBehaviour
 		Time.timeScale = 1.0f;
 
 	}
+
+
+	private void OnCollisionEnter(Collision other)
+	{
+		if (other.gameObject.name == "PlataformObject")
+		{
+			if (other.GetContact(0).normal.y > 0.5f)
+			{
+				currentPlatform = other.rigidbody;
+				currentPlatformPosition = currentPlatform.transform.position;
+			}
+		}
+	}
+
+	private void OnCollisionExit(Collision other)
+	{
+		if (other.gameObject.name == "PlataformObject")
+		{
+			currentPlatform = null;
+		}
+	}
+
 
 }
