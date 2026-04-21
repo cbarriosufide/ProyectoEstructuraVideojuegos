@@ -74,6 +74,11 @@ public class Player : MonoBehaviour
 	private void FixedUpdate()
 	{
 		Movement();
+
+		if (transform.position.y < -120)
+		{
+			Die();
+		}
 	}
 
 	private void Movement()

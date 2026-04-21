@@ -19,7 +19,6 @@ public class GameCamera : MonoBehaviour
 	void Awake()
 	{
 		current = this;
-		mode = ModeFollowPlayer;
 
 		// Si Player.current aún no está inicializado, búscalo
 		if (Player.current == null)
