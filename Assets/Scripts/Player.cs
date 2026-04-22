@@ -443,6 +443,11 @@ public class Player : MonoBehaviour
 		StartCoroutine("_DieCoroutine");
 	}
 
+	public void Win()
+	{
+		SceneManager.LoadScene("PantallaVictoria");
+	}
+
 	Coroutine activeDieCoroutine = null;
 
 	IEnumerator _DieCoroutine()
@@ -459,6 +464,7 @@ public class Player : MonoBehaviour
 
 	private void OnCollisionEnter(Collision other)
 	{
+		Debug.Log(other.gameObject.name);
 		if (other.gameObject.name == "PlataformObject")
 		{
 			if (other.GetContact(0).normal.y > 0.5f)
