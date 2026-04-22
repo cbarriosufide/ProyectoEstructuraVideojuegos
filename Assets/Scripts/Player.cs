@@ -447,10 +447,10 @@ public class Player : MonoBehaviour
 
 	IEnumerator _DieCoroutine()
 	{
-		Time.timeScale = 0.0f;
+		Time.timeScale = 0.2f;
 
 		yield return new WaitForSecondsRealtime(0.5f);
-		SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+		SceneManager.LoadScene("PantallaMuerte");
 
 		Time.timeScale = 1.0f;
 
