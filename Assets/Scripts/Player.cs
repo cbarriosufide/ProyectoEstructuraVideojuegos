@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.Audio;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class Player : MonoBehaviour
 {
@@ -60,6 +61,7 @@ public class Player : MonoBehaviour
 
 	private Rigidbody currentPlatform;
 	private Vector3 currentPlatformPosition;
+	private Slider healthbar;
 
 	private void Awake()
 	{
@@ -82,8 +84,16 @@ public class Player : MonoBehaviour
 
 		animator = GetComponent<Animator>();
 
+		healthbar = transform.Find("Canvas").Find("HealthBar").GetComponent<Slider>();
+
 
 		movementMode = MovementGrounded;
+	}
+
+	private void Update()
+	{
+		healthbar.transform.eulerAngles = Vector3.zero;
+		healthbar.transform.position = transform.position + new Vector3(0, 2f, -8);
 	}
 
 	private void FixedUpdate()
@@ -368,6 +378,9 @@ public class Player : MonoBehaviour
 
 		StopCoroutine("_HurtCoroutine");
 		StartCoroutine("_HurtCoroutine");
+
+		StopCoroutine(HealthBarShowCoroutine());
+		StartCoroutine(HealthBarShowCoroutine());
 	}
 
 	IEnumerator _HurtCoroutine()
@@ -390,6 +403,15 @@ public class Player : MonoBehaviour
 			yield return new WaitForSecondsRealtime(0.01f);
 		}
 
+	}
+
+	IEnumerator HealthBarShowCoroutine()
+	{
+		healthbar.value = hp;
+
+		healthbar.gameObject.SetActive(true);
+		yield return new WaitForSeconds(2f);
+		healthbar.gameObject.SetActive(false);
 	}
 
 	public void Knockback(Vector3 direction, float force)
