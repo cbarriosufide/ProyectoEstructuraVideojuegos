@@ -13,6 +13,10 @@ public class EnemyMovement : MonoBehaviour
 	[SerializeField] private float detectionRange = 10f;
 	[SerializeField] private float losePlayerRange = 13f;
 
+	[Header("Vida")]
+	public float health = 10f;
+	public float maxHealth = 10f;
+
 	private Rigidbody rb;
 	private Transform player;
 	private Animator animator;
@@ -33,6 +37,7 @@ public class EnemyMovement : MonoBehaviour
 	void Start()
 	{
 		startPosition = transform.position;
+		health = maxHealth;
 
 		GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
 		if (playerObj != null)
@@ -72,8 +77,26 @@ public class EnemyMovement : MonoBehaviour
 	{
 		if (other.gameObject == Player.current.gameObject)
 		{
-			Player.current.Knockback(-other.GetContact(0).normal, 40f);
-			Player.current.Hurt(1);
+			Vector3 contactPoint = other.GetContact(0).point;
+			Rigidbody playerRb = Player.current.GetComponent<Rigidbody>();
+			
+			float contactHeight = contactPoint.y - transform.position.y;
+			float enemyHeight = GetComponent<Collider>().bounds.size.y;
+			
+			bool isOnTop = contactHeight > (enemyHeight * 0.5f);
+			bool isFalling = playerRb != null && playerRb.velocity.y < 0f;
+			
+			if (isOnTop && isFalling)
+			{
+				TakeDamage(1f);
+				Player.current.Knockback(Vector3.up, 20f);
+				Debug.Log($"Jugador cayó encima del enemigo");
+			}
+			else
+			{
+				Player.current.Knockback(-other.GetContact(0).normal, 40f);
+				Player.current.Hurt(1);
+			}
 		}
 	}
 
@@ -136,6 +159,26 @@ public class EnemyMovement : MonoBehaviour
 			RigidbodyConstraints.FreezeRotationZ;
 
 		rb.useGravity = true;
+	}
+
+	public void TakeDamage(float damage)
+	{
+		health -= damage;
+		if (health <= 0f)
+		{
+			Die();
+		}
+	}
+
+	private void Die()
+	{
+		if (animator != null)
+			animator.enabled = false;
+			
+		if (rb != null)
+			rb.isKinematic = true;
+			
+		Destroy(gameObject);
 	}
 
 #if UNITY_EDITOR
